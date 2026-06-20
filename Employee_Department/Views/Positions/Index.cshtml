@@ -1,0 +1,172 @@
+﻿@{
+    ViewData["Title"] = "จัดการตำแหน่ง";
+    var posData = ViewBag.PosData as List<dynamic> ?? new List<dynamic>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="page-title m-0">
+        <i class="fas fa-briefcase text-primary"></i> จัดการตำแหน่ง
+    </h2>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#posModal" onclick="openCreatePos()">
+        <i class="fas fa-plus-circle"></i> เพิ่มตำแหน่งใหม่
+    </button>
+</div>
+
+<div class="card mb-3 card-form">
+    <div class="card-body">
+        <form id="searchForm" class="row g-3">
+            <div class="col-md-9">
+                <label class="form-label fw-semibold">ค้นหาตำแหน่ง</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="พิมพ์ชื่อตำแหน่ง..." />
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="fas fa-search"></i> ค้นหา
+                </button>
+                <button type="button" id="resetBtn" class="btn btn-outline-secondary">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width:90px;">รหัส</th>
+                    <th>ชื่อตำแหน่ง</th>
+                    <th class="text-center">พนักงานที่ใช้</th>
+                    <th style="width:240px;">การดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody id="posTableBody">
+                @await Html.PartialAsync("PositionRows", posData)
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer text-muted small">
+        ทั้งหมด <span id="posCount">@posData.Count</span> ตำแหน่ง
+    </div>
+</div>
+
+@* Modal Create/Edit *@
+<div class="modal fade" id="posModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="posForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="posModalTitle">เพิ่มตำแหน่งใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="PositionId" name="PositionId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">ชื่อตำแหน่ง</label>
+                        <input type="text" class="form-control" id="PositionName" name="PositionName" required />
+                        <div class="text-danger small mt-1" id="posError"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="far fa-check-circle"></i> บันทึก
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        function loadList() {
+            const search = $('#searchInput').val().trim();
+            $.get('@Url.Action("GetRows")', { search: search }, function (html) {
+                $('#posTableBody').html(html);
+                const count = $('#posTableBody tr[data-id]').length;
+                $('#posCount').text(count);
+            });
+        }
+
+        function openCreatePos() {
+            $('#posModalTitle').text('เพิ่มตำแหน่งใหม่');
+            $('#PositionId').val(0);
+            $('#PositionName').val('');
+            $('#posError').text('');
+        }
+
+        function editPos(id) {
+            $.get('@Url.Action("GetOne")', { id: id }, function (res) {
+                if (!res.success) { notify.error(res.message); return; }
+                $('#posModalTitle').text('แก้ไขชื่อตำแหน่ง');
+                $('#PositionId').val(res.data.positionId);
+                $('#PositionName').val(res.data.positionName);
+                $('#posError').text('');
+                $('#posModal').modal('show');
+            });
+        }
+
+        async function deletePos(id, name) {
+            const ok = await confirmAction(`ยืนยันการลบตำแหน่ง "${name}"?`, '', 'ลบ', 'ยกเลิก');
+            if (!ok) return;
+
+            $.ajax({
+                url: '@Url.Action("Delete")',
+                type: 'POST',
+                data: { id: id, __RequestVerificationToken: token },
+                success: function (res) {
+                    if (res.success) {
+                        notify.success(res.message);
+                        $(`tr[data-id="${id}"]`).fadeOut(300, function () {
+                            $(this).remove();
+                            $('#posCount').text($('#posTableBody tr[data-id]').length);
+                        });
+                    } else {
+                        notify.error(res.message);
+                    }
+                }
+            });
+        }
+
+        $('#posForm').on('submit', function (e) {
+            e.preventDefault();
+            const id = $('#PositionId').val();
+            const url = id == 0 ? '@Url.Action("Create")' : '@Url.Action("Edit")';
+            const data = {
+                PositionId: id,
+                PositionName: $('#PositionName').val().trim(),
+                __RequestVerificationToken: token
+            };
+            if (id != 0) data.id = id;
+
+            $.ajax({
+                url: url, type: 'POST', data: data,
+                success: function (res) {
+                    if (res.success) {
+                        $('#posModal').modal('hide');
+                        notify.success(res.message);
+                        loadList();
+                    } else {
+                        $('#posError').text(res.message);
+                    }
+                }
+            });
+        });
+
+        $('#searchForm').on('submit', function (e) { e.preventDefault(); loadList(); });
+        $('#resetBtn').on('click', function () { $('#searchInput').val(''); loadList(); });
+
+        let typingTimer;
+        $('#searchInput').on('input', function () {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(loadList, 300);
+        });
+    </script>
+}

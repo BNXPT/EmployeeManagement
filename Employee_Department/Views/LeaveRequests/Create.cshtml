@@ -1,0 +1,193 @@
+@model Employee_Department.Models.LeaveRequest
+@{
+    ViewData["Title"] = "ยื่นคำขอลางาน";
+    var presets = new[] { "ลาป่วย", "ลากิจ", "ลาพักร้อน", "ลาคลอด", "ลาบวช", "ลาไม่รับเงินเดือน" };
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-file-signature text-success"></i> ยื่นคำขอลางาน
+</h2>
+<hr />
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-semibold">ประเภทการลา</label>
+                <select id="LeaveTypeSelect" class="form-select mb-2">
+                    <option value="">-- เลือกประเภทการลา --</option>
+                    @foreach (var p in presets)
+                    {
+                        <option value="@p">@p</option>
+                    }
+                    <option value="__custom__">อื่นๆ (พิมพ์เอง)</option>
+                </select>
+                <input asp-for="LeaveType" id="LeaveType" class="form-control" placeholder="พิมพ์ประเภทการลา..." style="display:none;" />
+                <span asp-validation-for="LeaveType" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3">
+                <<div class="col-md-6">
+                    <label asp-for="StartDate" class="form-label fw-semibold"></label>
+                    <div class="input-group">
+                        <input asp-for="StartDate" type="text" class="form-control thai-date" placeholder="วว/ดด/ปปปป" autocomplete="off" />
+                        <span class="input-group-text bg-primary text-white cal-trigger" style="cursor:pointer;">
+                            <i class="far fa-calendar-alt"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="StartDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EndDate" class="form-label fw-semibold"></label>
+                    <div class="input-group">
+                        <input asp-for="EndDate" type="text" class="form-control thai-date" placeholder="วว/ดด/ปปปป" autocomplete="off" />
+                        <span class="input-group-text bg-primary text-white cal-trigger" style="cursor:pointer;">
+                            <i class="far fa-calendar-alt"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="EndDate" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label asp-for="Reason" class="form-label fw-semibold"></label>
+                <textarea asp-for="Reason" class="form-control" rows="4" placeholder="กรุณาระบุเหตุผลในการลา..."></textarea>
+                <span asp-validation-for="Reason" class="text-danger small"></span>
+            </div>
+
+            <div class="alert alert-info mt-3 small mb-0">
+                <i class="fas fa-info-circle"></i> เมื่อกดส่งคำขอ ระบบจะแจ้งหัวหน้าแผนกของคุณผ่านอีเมลทันที
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="far fa-paper-plane"></i> ส่งคำขอ
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> ยกเลิก
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+    <script>
+        // Dropdown ประเภทการลา
+        const select = document.getElementById('LeaveTypeSelect');
+        const input  = document.getElementById('LeaveType');
+        if (select && input) {
+            select.addEventListener('change', () => {
+                if (select.value === '__custom__') {
+                    input.style.display = 'block';
+                    input.value = '';
+                    input.focus();
+                } else {
+                    input.style.display = 'none';
+                    input.value = select.value;
+                }
+            });
+            if (input.value) {
+                const match = Array.from(select.options).find(o => o.value === input.value);
+                if (match) select.value = input.value;
+                else { select.value = '__custom__'; input.style.display = 'block'; }
+            }
+        }
+
+        // Thai Buddhist Date Picker
+        document.querySelectorAll('.thai-date').forEach(el => {
+            // ล้างค่า el.value ที่มาในรูป BE ก่อนสร้าง flatpickr
+            // เพื่อให้ defaultDate เริ่มจาก today (ค.ศ.) สะอาดๆ
+            el.value = '';
+
+            flatpickr(el, {
+                locale: 'th',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: 'today',
+                parseDate: parseAnyDate,
+                formatDate: formatBuddhistDate,
+                onReady: showBuddhistHeader,
+                onOpen: showBuddhistHeader,
+                onMonthChange: showBuddhistHeader,
+                onYearChange: showBuddhistHeader,
+                onChange: showBuddhistHeader
+            });
+        });
+
+        // Parser ที่รองรับทั้ง ค.ศ. และ พ.ศ.
+        function parseAnyDate(str, format) {
+            // รูป ISO: yyyy-mm-dd
+            const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (iso) {
+                let y = parseInt(iso[1]);
+                const m = parseInt(iso[2]) - 1;
+                const d = parseInt(iso[3]);
+                if (y > 2400) y -= 543;       //ถ้าเป็น พ.ศ. → แปลงเป็น ค.ศ.
+                return new Date(y, m, d);
+            }
+            // รูป dd/mm/yyyy
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                const d = parseInt(parts[0]);
+                const m = parseInt(parts[1]) - 1;
+                let y = parseInt(parts[2]);
+                if (y > 2400) y -= 543;       //ถ้าเป็น พ.ศ. → แปลงเป็น ค.ศ.
+                return new Date(y, m, d);
+            }
+            return new Date(str);
+        }
+
+        // Format ออกมาเป็น พ.ศ. ตอนแสดง / ค.ศ. ตอนส่ง server
+        function formatBuddhistDate(date, format) {
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            if (format === 'Y-m-d') {
+                return `${date.getFullYear()}-${mm}-${dd}`;        // ค.ศ. → server
+            }
+            if (format === 'd/m/Y') {
+                return `${dd}/${mm}/${date.getFullYear() + 543}`;  // พ.ศ. → display
+            }
+            return date.toString();
+        }
+
+        // เปลี่ยนปีใน header เป็น พ.ศ.
+        function showBuddhistHeader(selectedDates, dateStr, instance) {
+            setTimeout(() => {
+                // Query DOM ตรงๆ — robust กว่าใช้ instance.yearElements
+                const yearInputs = instance.calendarContainer.querySelectorAll('input.cur-year, .flatpickr-current-month input');
+                yearInputs.forEach(el => {
+                    const val = parseInt(el.value);
+                    // ถ้ายังเป็น ค.ศ. (< 2500) → แปลงเป็น พ.ศ.
+                    if (val && val < 2500) {
+                        el.value = val + 543;
+                    }
+                });
+            }, 10);
+        }
+
+        // ปุ่ม icon ปฏิทินคลิกเปิด picker
+        document.querySelectorAll('.cal-trigger').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const group = btn.closest('.input-group');
+                const inputs = group.querySelectorAll('input');
+                for (const inp of inputs) {
+                    if (inp._flatpickr) {
+                        inp._flatpickr.toggle();
+                        return;
+                    }
+                }
+            });
+        });
+    </script>
+}
+

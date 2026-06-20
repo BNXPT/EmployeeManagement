@@ -1,0 +1,318 @@
+﻿@model Employee_Department.Controllers.TrashViewModel
+@{
+    ViewData["Title"] = "ถังขยะ";
+    var totalDeleted = Model.Departments.Count + Model.Employees.Count + Model.Managers.Count
+                     + Model.Positions.Count + Model.LeaveRequests.Count;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-title m-0">
+        <i class="fas fa-trash text-danger"></i> ถังขยะ — ข้อมูลที่ถูกลบ
+        <span class="badge bg-danger ms-2">@totalDeleted รายการ</span>
+    </h2>
+    @if (totalDeleted > 0)
+    {
+        <form asp-action="EmptyTrash" method="post" class="empty-trash-form">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-fire"></i> ล้างถังขยะทั้งหมด
+            </button>
+        </form>
+    }
+</div>
+
+<div class="alert alert-info small">
+    <i class="fas fa-info-circle"></i>
+    หน้านี้แสดงข้อมูลที่ถูก "ลบ" จากระบบ — กดปุ่มสีเขียวเพื่อกู้คืน หรือสีแดงเพื่อลบถาวร
+</div>
+
+@* ========== แผนก ========== *@
+@if (Model.Departments.Any())
+{
+    <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">
+            <i class="fas fa-building text-primary"></i> แผนก (@Model.Departments.Count รายการ)
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>รหัส</th>
+                        <th>ชื่อแผนก</th>
+                        <th>ลบเมื่อ</th>
+                        <th style="width:240px;">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.Departments)
+                    {
+                        <tr>
+                            <td>@d.DepartmentId</td>
+                            <td><span class="dept-badge">@d.DepartmentName</span></td>
+                            <td><small class="text-muted">@d.DeletedAt.ToThaiDateTime()</small></td>
+                            <td>
+                                <form asp-action="RestoreDepartment" asp-route-id="@d.DepartmentId" method="post" class="d-inline restore-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-undo"></i> กู้คืน
+                                    </button>
+                                </form>
+                                <form asp-action="PurgeDepartment" asp-route-id="@d.DepartmentId" method="post" class="d-inline purge-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i> ลบถาวร
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ========== พนักงาน ========== *@
+@if (Model.Employees.Any())
+{
+    <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">
+            <i class="fas fa-user text-primary"></i> พนักงาน (@Model.Employees.Count รายการ)
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>รหัส</th>
+                        <th>ชื่อ</th>
+                        <th>แผนก</th>
+                        <th>เลขประชาชน</th>
+                        <th>ลบเมื่อ</th>
+                        <th style="width:240px;">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.Employees)
+                    {
+                        <tr>
+                            <td>@e.EmployeeId</td>
+                            <td class="fw-semibold">@e.FullName</td>
+                            <td>@e.Department?.DepartmentName</td>
+                            <td class="national-id">@e.NationalId</td>
+                            <td><small class="text-muted">@e.DeletedAt.ToThaiDateTime()</small></td>
+                            <td>
+                                <form asp-action="RestoreEmployee" asp-route-id="@e.EmployeeId" method="post" class="d-inline restore-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-undo"></i> กู้คืน
+                                    </button>
+                                </form>
+                                <form asp-action="PurgeEmployee" asp-route-id="@e.EmployeeId" method="post" class="d-inline purge-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i> ลบถาวร
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ========== หัวหน้าแผนก ========== *@
+@if (Model.Managers.Any())
+{
+    <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">
+            <i class="fas fa-user-tie text-primary"></i> หัวหน้าแผนก (@Model.Managers.Count รายการ)
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>รหัส</th>
+                        <th>ชื่อ</th>
+                        <th>แผนก</th>
+                        <th>อีเมล</th>
+                        <th>ลบเมื่อ</th>
+                        <th style="width:240px;">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model.Managers)
+                    {
+                        <tr>
+                            <td>@m.ManagerId</td>
+                            <td class="fw-semibold">@m.FullName</td>
+                            <td>@m.Department?.DepartmentName</td>
+                            <td>@m.Email</td>
+                            <td><small class="text-muted">@m.DeletedAt.ToThaiDateTime()</small></td>
+                            <td>
+                                <form asp-action="RestoreManager" asp-route-id="@m.ManagerId" method="post" class="d-inline restore-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-undo"></i> กู้คืน
+                                    </button>
+                                </form>
+                                <form asp-action="PurgeManager" asp-route-id="@m.ManagerId" method="post" class="d-inline purge-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i> ลบถาวร
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ========== ตำแหน่ง ========== *@
+@if (Model.Positions.Any())
+{
+    <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">
+            <i class="fas fa-briefcase text-primary"></i> ตำแหน่ง (@Model.Positions.Count รายการ)
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>รหัส</th>
+                        <th>ชื่อตำแหน่ง</th>
+                        <th>ลบเมื่อ</th>
+                        <th style="width:240px;">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Positions)
+                    {
+                        <tr>
+                            <td>@p.PositionId</td>
+                            <td class="fw-semibold">@p.PositionName</td>
+                            <td><small class="text-muted">@p.DeletedAt.ToThaiDateTime()</small></td>
+                            <td>
+                                <form asp-action="RestorePosition" asp-route-id="@p.PositionId" method="post" class="d-inline restore-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-undo"></i> กู้คืน
+                                    </button>
+                                </form>
+                                <form asp-action="PurgePosition" asp-route-id="@p.PositionId" method="post" class="d-inline purge-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i> ลบถาวร
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ========== คำขอลางาน ========== *@
+@if (Model.LeaveRequests.Any())
+{
+    <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">
+            <i class="fas fa-file-alt text-primary"></i> คำขอลางาน (@Model.LeaveRequests.Count รายการ)
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>เลขที่</th>
+                        <th>พนักงาน</th>
+                        <th>ประเภท</th>
+                        <th>สถานะ</th>
+                        <th>ลบเมื่อ</th>
+                        <th style="width:240px;">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.LeaveRequests)
+                    {
+                        <tr>
+                            <td>#@l.LeaveRequestId.ToString("D5")</td>
+                            <td>@l.Employee?.FullName</td>
+                            <td>@l.LeaveType</td>
+                            <td><span class="badge bg-secondary">@l.Status</span></td>
+                            <td><small class="text-muted">@l.DeletedAt.ToThaiDateTime()</small></td>
+                            <td>
+                                <form asp-action="RestoreLeaveRequest" asp-route-id="@l.LeaveRequestId" method="post" class="d-inline restore-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-undo"></i> กู้คืน
+                                    </button>
+                                </form>
+                                <form asp-action="PurgeLeaveRequest" asp-route-id="@l.LeaveRequestId" method="post" class="d-inline purge-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i> ลบถาวร
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@* ========== ถังขยะว่าง ========== *@
+@if (totalDeleted == 0)
+{
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-trash" style="font-size:4rem;opacity:.3;"></i>
+        <h4 class="mt-3">ถังขยะว่างเปล่า</h4>
+        <p>ยังไม่มีข้อมูลที่ถูกลบในระบบ</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // ฟอร์มกู้คืน — confirm สีฟ้า
+        document.querySelectorAll('.restore-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const ok = await confirmAction('กู้คืนรายการนี้?', 'ข้อมูลจะกลับมาแสดงในระบบ', 'กู้คืน', 'ยกเลิก');
+                if (ok) form.submit();
+            });
+        });
+
+        // ฟอร์มลบถาวร — confirm สีแดง
+        document.querySelectorAll('.purge-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const ok = await confirmAction(
+                    'ลบถาวร — กู้กลับไม่ได้',
+                    'ยืนยันการลบข้อมูลนี้ออกจากระบบถาวรหรือไม่?',
+                    'ลบถาวร',
+                    'ยกเลิก'
+                );
+                if (ok) form.submit();
+            });
+        });
+
+        // ฟอร์มล้างถังขยะทั้งหมด
+        document.querySelector('.empty-trash-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ok = await confirmAction(
+                'ล้างถังขยะทั้งหมด?',
+                'ลบทุกอย่างในถังขยะถาวร กู้กลับไม่ได้',
+                'ล้างเลย',
+                'ยกเลิก'
+            );
+            if (ok) e.target.submit();
+        });
+    </script>
+}

@@ -1,0 +1,186 @@
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    var fullName = User.FindFirst("FullName")?.Value ?? "";
+    var roleDisplay = role switch
+    {
+        "Admin" => "ผู้ดูแลระบบ",
+        "Manager" => "หัวหน้าแผนก",
+        "Employee" => "พนักงาน",
+        _ => ""
+    };
+    var roleBadgeClass = role switch
+    {
+        "Admin" => "bg-warning text-dark",
+        "Manager" => "bg-info text-dark",
+        "Employee" => "bg-secondary",
+        _ => "bg-secondary"
+    };
+}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ระบบจัดการพนักงาน</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    @* ⬇️ ย้าย SweetAlert + helpers มาที่ <head> เพื่อให้โหลดก่อนทุก script *@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.notify = {
+            success: (message) => Swal.fire({
+                icon: 'success', title: 'สำเร็จ', text: message,
+                timer: 2500, showConfirmButton: false,
+                toast: true, position: 'top-end'
+            }),
+            error: (message) => Swal.fire({
+                icon: 'error', title: 'ผิดพลาด', text: message,
+                timer: 3000, showConfirmButton: false,
+                toast: true, position: 'top-end'
+            }),
+            warning: (message) => Swal.fire({
+                icon: 'warning', title: 'แจ้งเตือน', text: message,
+                confirmButtonText: 'ตกลง', confirmButtonColor: '#f59e0b'
+            })
+        };
+        window.confirmAction = (title, text = '', confirmText = 'ยืนยัน', cancelText = 'ยกเลิก') => {
+            return Swal.fire({
+                title: title, text: text, icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: confirmText, cancelButtonText: cancelText,
+                reverseButtons: true
+            }).then(result => result.isConfirmed);
+        };
+    </script>
+
+    <style>
+        body { font-family:'Sarabun',sans-serif; background:#f5f7fa; min-height:100vh; display:flex; flex-direction:column; }
+        main { flex:1; }
+        .navbar-custom { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link,
+        .navbar-custom .navbar-text { color:white !important; }
+        .navbar-custom .nav-link:hover { opacity:.85; }
+        .table thead th { background:#f8f9fa; font-weight:600; color:#495057; border-bottom:2px solid #dee2e6; }
+        .national-id { color:#c2185b; font-weight:500; letter-spacing:.5px; }
+        .dept-badge { background:#3b82f6; color:white; padding:4px 12px; border-radius:12px; font-size:.85rem; display:inline-block; }
+        .dept-badge-secondary { background:#6c757d; }
+        .btn-action { padding:6px 12px; font-size:.875rem; margin:0 2px; }
+        .page-title { color:#1f2937; font-weight:600; }
+        .card-form { border:1px solid #e5e7eb; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+        .footer { background:#fff; border-top:1px solid #e5e7eb; padding:20px 0; margin-top:40px; text-align:center; color:#6b7280; }
+    </style>
+</head>
+<body>
+    @if (isAuthenticated)
+    {
+        <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand fw-bold" asp-controller="Employees" asp-action="Index">
+                    <i class="fas fa-users"></i> ระบบจัดการพนักงาน
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navMain">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Employees" asp-action="Index">
+                                <i class="far fa-id-badge"></i> รายชื่อพนักงาน
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Managers" asp-action="Index">
+                                <i class="fas fa-user-tie"></i> หัวหน้าแผนก
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="LeaveRequests" asp-action="Index">
+                                <i class="fas fa-file-alt"></i> คำขอลางาน
+                            </a>
+                        </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i> จัดการระบบ
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Departments" asp-action="Index">
+                                            <i class="fas fa-building"></i> จัดการแผนก
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Positions" asp-action="Index">
+                                            <i class="fas fa-briefcase"></i> จัดการตำแหน่ง
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" asp-controller="Trash" asp-action="Index">
+                                            <i class="fas fa-trash"></i> ถังขยะ
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item navbar-text me-3">
+                            <i class="fas fa-user-circle"></i> @fullName
+                            <span class="badge @roleBadgeClass ms-1">@roleDisplay</span>
+                        </li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-link nav-link" style="border:none;background:none;">
+                                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    }
+
+    <main class="container-fluid px-4 py-4">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <span>&copy; @(DateTime.Now.Year + 543) - ระบบจัดการแผนกพนักงาน</span>
+        </div>
+    </footer>
+
+    @* แสดง TempData ผ่าน SweetAlert (อยู่ที่นี่ที่เดียว) *@
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                notify.success(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Success"])));
+            });
+        </script>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                notify.error(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Error"])));
+            });
+        </script>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

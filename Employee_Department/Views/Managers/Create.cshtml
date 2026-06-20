@@ -1,0 +1,58 @@
+@model Employee_Department.Models.Manager
+@{
+    ViewData["Title"] = "เพิ่มหัวหน้าแผนก";
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-user-tie text-success"></i> เพิ่มหัวหน้าแผนกใหม่
+</h2>
+<hr />
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label fw-semibold"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NationalId" class="form-label fw-semibold"></label>
+                    <input asp-for="NationalId" class="form-control" maxlength="13" />
+                    <span asp-validation-for="NationalId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DepartmentId" class="form-label fw-semibold"></label>
+                    @Html.DropDownList("DepartmentId", ViewBag.Departments as Microsoft.AspNetCore.Mvc.Rendering.SelectList,
+                        "-- เลือกแผนก --", new { @class = "form-select" })
+                    <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label fw-semibold"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="far fa-check-circle"></i> บันทึก
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> ยกเลิก
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

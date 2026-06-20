@@ -1,0 +1,142 @@
+@model IEnumerable<Employee_Department.Models.LeaveRequest>
+@{
+    ViewData["Title"] = "คำขอลางาน";
+    var role = ViewBag.Role as string ?? "";
+    var isEmployee = role == "Employee";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="page-title m-0">
+        <i class="fas fa-file-alt text-primary"></i> คำขอลางาน
+    </h2>
+    <div class="d-flex gap-2">
+        @if (role == "Admin")
+        {
+            <a asp-action="ExportExcel" class="btn btn-outline-success">
+                <i class="far fa-file-excel"></i> Export Excel
+            </a>
+        }
+        @if (isEmployee)
+        {
+            <a asp-action="Create" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> ยื่นคำขอลางาน
+            </a>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width:90px;">เลขที่</th>
+                    @if (!isEmployee)
+                    {
+                        <th>พนักงาน</th>
+                        <th>แผนก</th>
+                    }
+                    <th>ประเภท</th>
+                    <th>ช่วงวันที่</th>
+                    <th class="text-center">จำนวนวัน</th>
+                    <th>ยื่นเมื่อ</th>
+                    <th>สถานะ</th>
+                    <th style="width:120px;">การดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in Model)
+                {
+                    var (badgeClass, statusText, icon) = l.Status switch
+                    {
+                        "Pending" => ("bg-warning text-dark", "รอพิจารณา", "fa-clock"),
+                        "Approved" => ("bg-success", "อนุมัติแล้ว", "fa-check-circle"),
+                        "Rejected" => ("bg-danger", "ปฏิเสธ", "fa-times-circle"),
+                        _ => ("bg-secondary", l.Status, "fa-question")
+                    };
+                    <tr>
+                        <td class="fw-semibold">#@l.LeaveRequestId.ToString("D5")</td>
+                        @if (!isEmployee)
+                        {
+                            <td>@l.Employee?.FullName</td>
+                            <td><span class="dept-badge dept-badge-secondary">@l.Employee?.Department?.DepartmentName</span></td>
+                        }
+                        <td>@l.LeaveType</td>
+                        <td>
+                            @if (l.StartDate.Date == l.EndDate.Date)
+                            {
+                                @l.StartDate.ToThaiDate()
+                            }
+                            else
+                            {
+
+                                @($"{l.StartDate.ToThaiDate()} - {l.EndDate.ToThaiDate()}")
+                            }
+                        </td>
+                        <td class="text-center">@l.DaysCount</td>
+                        <td><small class="text-muted">@l.RequestedAt.ToThaiDateTime()</small></td>
+                        <td><span class="badge @badgeClass"><i class="fas @icon"></i> @statusText</span></td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@l.LeaveRequestId" class="btn btn-sm btn-outline-info">
+                                <i class="far fa-eye"></i> ดู
+                            </a>
+                            @if (role == "Admin")
+                            {
+                                @*ลบ onclick ออก เพิ่ม class admin-delete *@
+                                <a asp-action="Cancel" asp-route-id="@l.LeaveRequestId"
+                                   class="btn btn-sm btn-danger admin-delete-leave">
+                                    <i class="far fa-trash-alt"></i> ลบ
+                                </a>
+                            }
+                            else if (isEmployee && l.Status == "Pending")
+                            {
+                                @*ลบ onclick ออก เพิ่ม class employee-cancel *@
+                                <a asp-action="Cancel" asp-route-id="@l.LeaveRequestId"
+                                   class="btn btn-sm btn-outline-warning employee-cancel-leave">
+                                    <i class="fas fa-times"></i> ยกเลิก
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="@(isEmployee ? 7 : 9)" class="text-center text-muted py-4">ยังไม่มีคำขอลางาน</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer text-muted small">ทั้งหมด @Model.Count() รายการ</div>
+</div>
+
+@section Scripts {
+    <script>
+        // ปุ่ม "ลบ" ของ Admin
+        document.querySelectorAll('.admin-delete-leave').forEach(link => {
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const ok = await confirmAction(
+                    'ยืนยันการลบคำขอนี้?',
+                    'คำขอจะถูกย้ายไปยังถังขยะ',
+                    'ลบ',
+                    'ยกเลิก'
+                );
+                if (ok) window.location.href = link.href;
+            });
+        });
+
+        // ปุ่ม "ยกเลิก" ของ Employee
+        document.querySelectorAll('.employee-cancel-leave').forEach(link => {
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const ok = await confirmAction(
+                    'ยกเลิกคำขอนี้?',
+                    'คำขอลางานของคุณจะถูกยกเลิก',
+                    'ยกเลิกคำขอ',
+                    'ปิด'
+                );
+                if (ok) window.location.href = link.href;
+            });
+        });
+    </script>
+}

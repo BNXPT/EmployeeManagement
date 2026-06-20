@@ -1,0 +1,36 @@
+﻿@model List<dynamic>
+
+@if (Model.Count == 0)
+{
+    <tr><td colspan="4" class="text-center text-muted py-4">ไม่พบตำแหน่ง</td></tr>
+}
+else
+{
+    foreach (var item in Model)
+    {
+        <tr data-id="@item.Position.PositionId">
+            <td>@item.Position.PositionId</td>
+            <td class="fw-semibold">@item.Position.PositionName</td>
+            <td class="text-center">
+                @if (item.UsageCount > 0)
+                {
+                    <span class="badge bg-info text-dark">@item.UsageCount คน</span>
+                }
+                else
+                {
+                    <span class="text-muted">ยังไม่ถูกใช้</span>
+                }
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-warning"
+                        onclick="editPos(@item.Position.PositionId)">
+                    <i class="far fa-edit"></i> แก้ไข
+                </button>
+                <button type="button" class="btn btn-sm btn-danger"
+                        onclick="deletePos(@item.Position.PositionId, '@Html.Raw(item.Position.PositionName.Replace("'", "\\'"))')">
+                    <i class="far fa-trash-alt"></i> ลบ
+                </button>
+            </td>
+        </tr>
+    }
+}

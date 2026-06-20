@@ -1,0 +1,37 @@
+﻿@model Employee_Department.Models.Position
+@{
+    ViewData["Title"] = "แก้ไขตำแหน่ง";
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-edit text-warning"></i> แก้ไขชื่อตำแหน่ง
+</h2>
+<hr />
+
+<div class="alert alert-info small">
+    <i class="fas fa-info-circle"></i> หมายเหตุ: ถ้าเปลี่ยนชื่อตำแหน่ง พนักงานที่ใช้ตำแหน่งนี้จะถูกอัปเดตชื่อให้อัตโนมัติ
+</div>
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="PositionId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="PositionName" class="form-label fw-semibold"></label>
+                <input asp-for="PositionName" class="form-control" />
+                <span asp-validation-for="PositionName" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-warning">
+                <i class="far fa-save"></i> บันทึกการแก้ไข
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> ยกเลิก
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

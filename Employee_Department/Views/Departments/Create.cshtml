@@ -1,0 +1,32 @@
+﻿@model Employee_Department.Models.Department
+@{
+    ViewData["Title"] = "เพิ่มแผนก";
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-plus-circle text-success"></i> เพิ่มแผนกใหม่
+</h2>
+<hr />
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="DepartmentName" class="form-label fw-semibold"></label>
+                <input asp-for="DepartmentName" class="form-control" placeholder="ใส่ชื่อแผนก" />
+                <span asp-validation-for="DepartmentName" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="far fa-check-circle"></i> บันทึก
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> ยกเลิก
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,165 @@
+@{
+    ViewData["Title"] = "รายชื่อพนักงาน";
+    var isAdmin = User.IsInRole("Admin");
+    var employees = ViewBag.Employees as List<Employee_Department.Models.Employee> ?? new List<Employee_Department.Models.Employee>();
+    var departments = ViewBag.Departments as List<Employee_Department.Models.Department> ?? new List<Employee_Department.Models.Department>();
+    var search = ViewBag.Search as string ?? "";
+    var selectedDeptId = ViewBag.SelectedDepartmentId as int?;
+    var totalCount = (int)(ViewBag.TotalCount ?? 0);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="page-title m-0">
+        <i class="fas fa-users text-primary"></i> รายชื่อพนักงาน
+    </h2>
+    @if (isAdmin)
+    {
+        <div class="d-flex gap-2">
+            <a asp-action="ExportExcel" class="btn btn-outline-success">
+                <i class="far fa-file-excel"></i> Export Excel
+            </a>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> เพิ่มพนักงาน
+            </a>
+        </div>
+    }
+</div>
+
+<div id="alertContainer"></div>
+
+@* ค้นหา + กรอง (Form GET) *@
+<div class="card mb-3 card-form">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">ค้นหา (ชื่อ / เลขประชาชน / เบอร์โทร / อีเมล)</label>
+                <input type="text" name="search" value="@search" class="form-control" placeholder="พิมพ์ชื่อ เลขประชาชน เบอร์โทร หรืออีเมล..." />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">กรองตามแผนก</label>
+                <select name="departmentId" class="form-select">
+                    <option value="">-- ทุกแผนก --</option>
+                    @foreach (var dept in departments)
+                    {
+                        if (selectedDeptId == dept.DepartmentId)
+                        {
+                            <option value="@dept.DepartmentId" selected>@dept.DepartmentName</option>
+                        }
+                        else
+                        {
+                            <option value="@dept.DepartmentId">@dept.DepartmentName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="fas fa-search"></i> ค้นหา
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="ล้างตัวกรอง">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width:80px;">ลำดับ</th>
+                    <th>ชื่อพนักงาน</th>
+                    <th>แผนก</th>
+                    <th>ตำแหน่ง</th>
+                    <th>เลขประชาชน</th>
+                    <th>เบอร์โทร</th>
+                    <th>อีเมล</th>
+                    <th style="width:240px;">การดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (employees.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">ไม่พบข้อมูลพนักงาน</td>
+                    </tr>
+                }
+                else
+                {
+                    int i = 1; 
+                    foreach (var emp in employees)
+                    {
+                        <tr data-id="@emp.EmployeeId">
+                            <td>@i</td>
+                            <td class="fw-semibold">@emp.FullName</td>
+                            <td><span class="dept-badge dept-badge-secondary">@emp.Department?.DepartmentName</span></td>
+                            <td>@emp.Position</td>
+                            <td class="national-id">@emp.NationalId</td>
+                            <td>@emp.PhoneNumber</td>
+                            <td>@emp.Email</td>
+                            <td>
+                                <a href="/Employees/Details/@emp.EmployeeId" class="btn btn-sm btn-outline-info">
+                                    <i class="far fa-eye"></i> ดู
+                                </a>
+                                @if (isAdmin)
+                                {
+                                    <a href="/Employees/Edit/@emp.EmployeeId" class="btn btn-sm btn-warning">
+                                        <i class="far fa-edit"></i> จัดการ
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="deleteEmployee(@emp.EmployeeId, '@Html.Raw(emp.FullName.Replace("'", "\\'"))')">
+                                        <i class="far fa-trash-alt"></i> ลบ
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer text-muted small">
+        ทั้งหมด @totalCount คน
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        async function deleteEmployee(id, name) {
+            const ok = await confirmAction(
+                `ยืนยันการลบพนักงาน "${name}"?`,
+                'ข้อมูลจะถูกย้ายไปยังถังขยะ',
+                'ลบ',
+                'ยกเลิก'
+            );
+            if (!ok) return;
+
+            $.ajax({
+                url: `/Employees/Delete/${id}`,
+                type: 'POST',
+                data: { id: id },
+                success: function (res) {
+                    if (res.success) {
+                        notify.success(res.message);
+                        $(`tr[data-id="${id}"]`).fadeOut(300, function () {
+                            $(this).remove();
+                        });
+                    } else {
+                        notify.error(res.message);
+                    }
+                },
+                error: function () {
+                    notify.error('ลบไม่สำเร็จ — ลองใหม่อีกครั้ง');
+                }
+            });
+        }
+    </script>
+}

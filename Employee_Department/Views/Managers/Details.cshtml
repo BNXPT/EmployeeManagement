@@ -1,0 +1,47 @@
+@model Employee_Department.Models.Manager
+@{
+    ViewData["Title"] = "รายละเอียดหัวหน้าแผนก";
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-user-tie text-info"></i> รายละเอียดหัวหน้าแผนก
+</h2>
+<hr />
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">รหัสหัวหน้า</dt>
+            <dd class="col-sm-9">@Model.ManagerId</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.FullName)</dt>
+            <dd class="col-sm-9">@Model.FullName</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.NationalId)</dt>
+            <dd class="col-sm-9 national-id">@Model.NationalId</dd>
+
+            <dt class="col-sm-3">แผนกที่รับผิดชอบ</dt>
+            <dd class="col-sm-9">
+                <span class="dept-badge">@Model.Department?.DepartmentName</span>
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.PhoneNumber)</dt>
+            <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Email)</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-4">
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.ManagerId" class="btn btn-warning">
+            <i class="far fa-edit"></i> แก้ไข
+        </a>
+    }
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> กลับ
+    </a>
+</div>

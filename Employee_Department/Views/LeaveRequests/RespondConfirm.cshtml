@@ -1,0 +1,61 @@
+@model Employee_Department.Controllers.RespondConfirmVM
+@{
+    ViewData["Title"] = "ยืนยันการดำเนินการ";
+    Layout = "_LayoutPublic";
+    var isApprove = Model.Decision == "approve";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7">
+        <div class="card shadow border-0">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4">
+                    @if (isApprove)
+                    {
+                        <span class="text-success"><i class="fas fa-check-circle"></i> ยืนยันการอนุมัติ</span>
+                    }
+                    else
+                    {
+
+                        <span class="text-danger"><i class="fas fa-times-circle"></i> ยืนยันการปฏิเสธ</span>
+                    }
+                </h3>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body small">
+                        <p class="mb-1"><strong>เลขที่:</strong> #@Model.LeaveRequest.LeaveRequestId.ToString("D5")</p>
+                        <p class="mb-1"><strong>พนักงาน:</strong> @Model.LeaveRequest.Employee?.FullName</p>
+                        <p class="mb-1"><strong>ประเภท:</strong> @Model.LeaveRequest.LeaveType</p>
+                        <p class="mb-1"><strong>วันที่:</strong> @Model.LeaveRequest.StartDate.ToString("dd/MM/yyyy") - @Model.LeaveRequest.EndDate.ToString("dd/MM/yyyy") (@Model.LeaveRequest.DaysCount วัน)</p>
+                        <p class="mb-0"><strong>เหตุผล:</strong> @Model.LeaveRequest.Reason</p>
+                    </div>
+                </div>
+
+                <form asp-action="RespondConfirm" method="post">
+                    <input type="hidden" name="token" value="@Model.Token" />
+                    <input type="hidden" name="decision" value="@Model.Decision" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">ความเห็น (ไม่บังคับ)</label>
+                        <textarea name="comment" class="form-control" rows="3"
+                                  placeholder="@(isApprove ? "เช่น อนุมัติได้ ขอให้พักผ่อน..." : "เช่น ช่วงนี้งานเร่ง ขอเลื่อน...")"></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        @if (isApprove)
+                        {
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> ยืนยันอนุมัติ
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-times"></i> ยืนยันปฏิเสธ
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

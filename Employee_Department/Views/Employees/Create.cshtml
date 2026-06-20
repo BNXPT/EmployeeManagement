@@ -1,0 +1,104 @@
+@model Employee_Department.Models.Employee
+@{
+    ViewData["Title"] = "เพิ่มพนักงาน";
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-user-plus text-success"></i> เพิ่มพนักงานใหม่
+</h2>
+<hr />
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label fw-semibold"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NationalId" class="form-label fw-semibold"></label>
+                    <input asp-for="NationalId" class="form-control" maxlength="13" />
+                    <span asp-validation-for="NationalId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DepartmentId" class="form-label fw-semibold"></label>
+                    @Html.DropDownList("DepartmentId", ViewBag.Departments as Microsoft.AspNetCore.Mvc.Rendering.SelectList,
+                        "-- เลือกแผนก --", new { @class = "form-select" })
+                    <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Position" class="form-label fw-semibold"></label>
+                    <select id="PositionSelect" class="form-select mb-2">
+                        <option value="">-- เลือกตำแหน่ง --</option>
+                        @foreach (var pos in ViewBag.Positions as List<string> ?? new List<string>())
+                        {
+                            <option value="@pos">@pos</option>
+                        }
+                    </select>
+                    <input asp-for="Position" id="Position" class="form-control" placeholder="พิมพ์ตำแหน่ง..." style="display:none;" />
+                    <span asp-validation-for="Position" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label fw-semibold"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="far fa-check-circle"></i> บันทึก
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> ยกเลิก
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const posSelect = document.getElementById('PositionSelect');
+            const posInput  = document.getElementById('Position');
+
+            function sync() {
+                if (posSelect.value === '__custom__') {
+                    posInput.style.display = 'block';
+                } else {
+                    posInput.style.display = 'none';
+                    posInput.value = posSelect.value;   // ⬅️ Copy ค่าทันที
+                }
+            }
+
+            posSelect.addEventListener('change', sync);
+
+            // กันลืม — sync อีกครั้งตอน submit form
+            const form = posSelect.closest('form');
+            form.addEventListener('submit', sync);
+
+            // ตอนโหลดหน้า ถ้ามีค่าเดิม
+            if (posInput.value) {
+                const match = Array.from(posSelect.options).find(o => o.value === posInput.value);
+                if (match) {
+                    posSelect.value = posInput.value;
+                } else {
+                    posSelect.value = '__custom__';
+                    posInput.style.display = 'block';
+                }
+            } else {
+                sync();
+            }
+        });
+    </script>
+}

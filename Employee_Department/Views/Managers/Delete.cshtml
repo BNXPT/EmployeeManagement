@@ -1,0 +1,36 @@
+@model Employee_Department.Models.Manager
+@{
+    ViewData["Title"] = "ลบหัวหน้าแผนก";
+}
+
+<h2 class="page-title mb-4">
+    <i class="fas fa-exclamation-triangle text-danger"></i> ยืนยันการลบ
+</h2>
+<hr />
+
+<div class="alert alert-warning">
+    คุณแน่ใจหรือไม่ว่าต้องการลบหัวหน้าแผนกคนนี้?
+</div>
+
+<div class="card card-form">
+    <div class="card-body p-4">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">ชื่อ-นามสกุล</dt>
+            <dd class="col-sm-9">@Model.FullName</dd>
+            <dt class="col-sm-3">แผนก</dt>
+            <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
+            <dt class="col-sm-3">อีเมล</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Delete" class="mt-4">
+    <input type="hidden" asp-for="ManagerId" />
+    <button type="submit" class="btn btn-danger">
+        <i class="far fa-trash-alt"></i> ยืนยันการลบ
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> ยกเลิก
+    </a>
+</form>
