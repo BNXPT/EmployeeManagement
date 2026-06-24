@@ -85,7 +85,6 @@ namespace Employee_Department.Controllers
         // POST: Managers/Create
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FullName,NationalId,DepartmentId,PhoneNumber,Email")] Manager manager)
         {
             if (await _context.Managers.AnyAsync(m => m.DepartmentId == manager.DepartmentId))
@@ -184,7 +183,6 @@ namespace Employee_Department.Controllers
         // POST: Managers/Edit/5
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ManagerId,FullName,NationalId,DepartmentId,PhoneNumber,Email")] Manager manager)
         {
             if (id != manager.ManagerId) return NotFound();

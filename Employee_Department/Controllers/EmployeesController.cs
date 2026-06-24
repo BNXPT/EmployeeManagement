@@ -86,7 +86,6 @@ namespace Employee_Department.Controllers
         // POST: Employees/Create
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FullName,NationalId,DepartmentId,Position,PhoneNumber,Email")] Employee employee)
         {
             // เช็คว่ามี Employee active ที่ใช้ NationalId นี้อยู่แล้วไหม
@@ -183,7 +182,6 @@ namespace Employee_Department.Controllers
         // POST: Employees/Edit/5
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("EmployeeId,FullName,NationalId,DepartmentId,Position,PhoneNumber,Email")] Employee employee)
         {
             if (id != employee.EmployeeId) return NotFound();
