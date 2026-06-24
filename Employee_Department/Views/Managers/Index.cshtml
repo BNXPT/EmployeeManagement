@@ -98,7 +98,7 @@
             $.ajax({
                 url: `/Managers/Delete/${id}`,
                 type: 'POST',
-                data: { id: id, __RequestVerificationToken: token },
+                data: { id: id},
                 success: function (res) {
                     if (res.success) {
                         notify.success(res.message);

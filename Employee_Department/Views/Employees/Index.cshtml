@@ -134,31 +134,21 @@
         const token = $('input[name="__RequestVerificationToken"]').val();
 
         async function deleteEmployee(id, name) {
-            const ok = await confirmAction(
-                `ยืนยันการลบพนักงาน "${name}"?`,
-                'ข้อมูลจะถูกย้ายไปยังถังขยะ',
-                'ลบ',
-                'ยกเลิก'
-            );
+            const ok = await confirmAction(`ลบ "${name}"?`, '', 'ลบ', 'ยกเลิก');
             if (!ok) return;
 
             $.ajax({
                 url: `/Employees/Delete/${id}`,
                 type: 'POST',
-                data: { id: id },
                 success: function (res) {
                     if (res.success) {
                         notify.success(res.message);
-                        $(`tr[data-id="${id}"]`).fadeOut(300, function () {
-                            $(this).remove();
-                        });
+                        $(`tr[data-id="${id}"]`).fadeOut(300, function () { $(this).remove(); });
                     } else {
                         notify.error(res.message);
                     }
                 },
-                error: function () {
-                    notify.error('ลบไม่สำเร็จ — ลองใหม่อีกครั้ง');
-                }
+                error: function () { notify.error('ลบไม่สำเร็จ'); }
             });
         }
     </script>

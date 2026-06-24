@@ -1,4 +1,4 @@
-﻿@model List<dynamic>
+﻿@model List<Employee_Department.Services.PositionInfo>
 
 @if (Model.Count == 0)
 {
@@ -8,9 +8,9 @@ else
 {
     foreach (var item in Model)
     {
-        <tr data-id="@item.Position.PositionId">
-            <td>@item.Position.PositionId</td>
-            <td class="fw-semibold">@item.Position.PositionName</td>
+        <tr data-id="@item.PositionId">
+            <td>@item.PositionId</td>
+            <td class="fw-semibold">@item.PositionName</td>
             <td class="text-center">
                 @if (item.UsageCount > 0)
                 {
@@ -22,12 +22,11 @@ else
                 }
             </td>
             <td>
-                <button type="button" class="btn btn-sm btn-warning"
-                        onclick="editPos(@item.Position.PositionId)">
+                <button type="button" class="btn btn-sm btn-warning" onclick="editPos(@item.PositionId)">
                     <i class="far fa-edit"></i> แก้ไข
                 </button>
                 <button type="button" class="btn btn-sm btn-danger"
-                        onclick="deletePos(@item.Position.PositionId, '@Html.Raw(item.Position.PositionName.Replace("'", "\\'"))')">
+                        onclick="deletePos(@item.PositionId, '@Html.Raw(item.PositionName.Replace("'", "\\'"))')">
                     <i class="far fa-trash-alt"></i> ลบ
                 </button>
             </td>

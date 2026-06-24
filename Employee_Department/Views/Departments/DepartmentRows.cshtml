@@ -1,4 +1,4 @@
-﻿@model List<dynamic>
+﻿@model List<Employee_Department.Services.DepartmentInfo>
 
 @if (Model.Count == 0)
 {
@@ -8,9 +8,9 @@ else
 {
     foreach (var item in Model)
     {
-        <tr data-id="@item.Department.DepartmentId">
-            <td>@item.Department.DepartmentId</td>
-            <td><span class="dept-badge">@item.Department.DepartmentName</span></td>
+        <tr data-id="@item.DepartmentId">
+            <td>@item.DepartmentId</td>
+            <td><span class="dept-badge">@item.DepartmentName</span></td>
             <td class="text-center">@(item.EmployeeCount + item.ManagerCount) คน</td>
             <td class="text-center">
                 @if (item.HasManager)
@@ -24,11 +24,11 @@ else
             </td>
             <td>
                 <button type="button" class="btn btn-sm btn-warning"
-                        onclick="editDept(@item.Department.DepartmentId)">
+                        onclick="editDept(@item.DepartmentId)">
                     <i class="far fa-edit"></i> แก้ไข
                 </button>
                 <button type="button" class="btn btn-sm btn-danger"
-                        onclick="deleteDept(@item.Department.DepartmentId, '@Html.Raw(item.Department.DepartmentName.Replace("'", "\\'"))')">
+                        onclick="deleteDept(@item.DepartmentId, '@Html.Raw(item.DepartmentName.Replace("'", "\\'"))')">
                     <i class="far fa-trash-alt"></i> ลบ
                 </button>
             </td>

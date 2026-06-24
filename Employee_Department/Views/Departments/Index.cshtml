@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "จัดการแผนก";
-    var deptData = ViewBag.DeptData as List<dynamic> ?? new List<dynamic>();
+    var deptData = ViewBag.DeptData as List<Employee_Department.Services.DepartmentInfo>
+                   ?? new List<Employee_Department.Services.DepartmentInfo>();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -101,7 +102,7 @@
             $.ajax({
                 url: '@Url.Action("Delete")',
                 type: 'POST',
-                data: { id: id, __RequestVerificationToken: token },
+                data: { id: id},
                 success: function (res) {
                     if (res.success) {
                         notify.success(res.message);
@@ -119,8 +120,7 @@
             const url = id == 0 ? '@Url.Action("Create")' : '@Url.Action("Edit")';
             const data = {
                 DepartmentId: id,
-                DepartmentName: $('#DepartmentName').val().trim(),
-                __RequestVerificationToken: token
+                DepartmentName: $('#DepartmentName').val().trim()
             };
             if (id != 0) data.id = id;
 
